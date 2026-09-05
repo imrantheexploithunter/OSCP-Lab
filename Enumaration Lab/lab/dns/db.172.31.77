@@ -1,0 +1,5 @@
+$TTL 300
+@ IN SOA ns.oscp.local. admin.oscp.local. ( 2026090501 3600 600 86400 300 )
+  IN NS ns.oscp.local.
+10 IN PTR target.oscp.local.
+2 IN PTR ns.oscp.local.

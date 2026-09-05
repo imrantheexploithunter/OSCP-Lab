@@ -1,0 +1,5 @@
+# Nmap 7.95 scan initiated Sat Sep  5 05:35:22 2026 as: /usr/lib/nmap/nmap -v -p 139,445 -oG smb.txt 172.31.77.10
+# Ports scanned: TCP(2;139,445) UDP(0;) SCTP(0;) PROTOCOLS(0;)
+Host: 172.31.77.10 ()	Status: Up
+Host: 172.31.77.10 ()	Ports: 139/open/tcp//netbios-ssn///, 445/open/tcp//microsoft-ds///
+# Nmap done at Sat Sep  5 05:35:23 2026 -- 1 IP address (1 host up) scanned in 0.46 seconds

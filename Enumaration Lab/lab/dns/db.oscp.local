@@ -1,0 +1,12 @@
+$TTL 300
+@ IN SOA ns.oscp.local. admin.oscp.local. ( 2026090501 3600 600 86400 300 )
+  IN NS ns.oscp.local.
+  IN A TARGET_IP
+  IN A TARGET_IP
+  IN MX 10 mail.oscp.local.
+  IN TXT "v=spf1 ip4:172.31.0.0/16 ~all"
+ns   IN A DNS_IP
+mail IN A TARGET_IP
+dev  IN A TARGET_IP
+git  IN A TARGET_IP
+www  IN A TARGET_IP

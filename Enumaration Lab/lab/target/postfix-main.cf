@@ -1,0 +1,10 @@
+myhostname = mail.oscp.local
+mydomain = oscp.local
+myorigin = $mydomain
+inet_interfaces = all
+inet_protocols = ipv4
+mynetworks = 127.0.0.0/8 172.31.0.0/16
+smtpd_banner = $myhostname ESMTP ITEH-Training
+disable_vrfy_command = no
+disable_expn_command = no
+smtpd_recipient_restrictions = permit_mynetworks,reject_unauth_destination

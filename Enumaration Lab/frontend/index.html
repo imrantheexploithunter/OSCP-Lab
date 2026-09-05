@@ -1,0 +1,98 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ImranTheExploitHunter | OSCP-Style PentestLab</title><style>
+:root{--bg:#030305;--p:#0b080a;--p2:#120b0e;--line:#3b151c;--text:#f5eef0;--muted:#a88f95;--a:#ff334f;--danger:#ff1744;--warn:#ffb300}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 15% 0,rgba(255,0,35,.22),transparent 32%),radial-gradient(circle at 85% 35%,rgba(180,0,25,.12),transparent 30%),linear-gradient(135deg,#020203 0%,#090507 48%,#020203 100%);min-height:100vh;color:var(--text);font:15px system-ui,-apple-system,Segoe UI,sans-serif}.wrap{max-width:1180px;margin:auto;padding:24px}.top{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:18px}.brand{font-weight:950;font-size:20px}.brand span{color:var(--a)}.tag{font-size:11px;border:1px solid var(--line);padding:6px 9px;border-radius:99px;color:#b9c9da}.hero,.card{background:rgba(14,23,34,.96);border:1px solid var(--line);border-radius:16px;padding:18px}.hero{margin-top:18px;padding:26px;box-shadow:0 0 45px rgba(255,20,50,.08),inset 0 0 30px rgba(255,0,30,.025)}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px}.row{display:flex;gap:9px;flex-wrap:wrap}.btn{background:#142537;color:var(--text);border:1px solid #38516c;border-radius:9px;padding:9px 13px;cursor:pointer}.primary{background:#143b31;border-color:#2c8068;color:#baffea}.danger{background:#371923;border-color:#713243}.muted{color:var(--muted)}.stat{font-size:30px;font-weight:900}.progress{height:8px;background:#1a2837;border-radius:9px;overflow:hidden}.progress i{display:block;height:100%;background:var(--a);box-shadow:0 0 12px rgba(255,30,60,.8)}h1{margin:0 0 8px}h2{margin-top:28px}.target{white-space:pre-wrap;background:#070d14;padding:13px;border-radius:10px;font-family:ui-monospace,monospace}.challenge.solved{border-color:#9e1b2f;box-shadow:0 0 18px rgba(255,20,50,.12)}.challenge{background:#0a121c;border:1px solid #1c2c40;border-radius:12px;padding:14px;margin-top:10px}.challenge input{width:100%;margin:9px 0;background:#070d14;color:#fff;border:1px solid var(--line);padding:10px;border-radius:8px}.small{font-size:12px}.ok{color:#ff5268;text-shadow:0 0 10px rgba(255,30,60,.55)}.bad{color:var(--danger)}.walk{margin-top:10px;background:#080f17;border-left:3px solid var(--a);padding:12px;white-space:pre-wrap;font:13px/1.6 ui-monospace,monospace}.hide{display:none}.footer{text-align:center;color:#71849a;padding:30px 0;font-size:12px}
+</style></head><body><div class="wrap"><div id="app"></div></div><script>
+const API='/api';const esc=s=>String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+async function api(p,o={}){if(o.body){o.headers={'Content-Type':'application/json'};o.body=JSON.stringify(o.body)}const r=await fetch(API+p,o);const j=await r.json().catch(()=>({detail:'Request failed'}));if(!r.ok)throw Error(j.detail||'Request failed');return j}
+async function dashboard(){try{let [s,l,m]=await Promise.all([api('/score'),api('/lab/status'),api('/modules')]);render(s,l,m)}catch(e){document.querySelector('#app').innerHTML='<div class="card"><h1>Lab unavailable</h1><p>'+esc(e.message)+'</p></div>'}}
+function render(s,l,m){
+document.querySelector('#app').innerHTML=`<div class="top"><div><div class="brand">Imran<span>TheExploitHunter</span></div><div class="muted small">OSCP-STYLE PENTESTLAB · LOCAL EDITION</div></div><div class="tag">AUTHORIZED TRAINING ONLY</div></div>
+<div class="hero"><h1>Enumeration → Methodology → Proof</h1><p class="muted">Original OSCP-style practice environment for authorized local training. No login or registration required.</p><div class="row"><button class="btn" onclick="act('/lab/reset')">Reset Lab</button></div></div>
+<div class="grid" style="margin-top:16px"><div class="card"><div class="muted">Score</div><div id="score-value" class="stat">${s.points}/${s.possible}</div><div class="progress"><i id="score-progress" style="width:${s.percent}%"></i></div><div id="score-text" class="small muted">${s.completed} challenges solved · ${s.percent}%</div></div>
+<div class="card"><div class="muted">Lab status</div><div id="lab-status" class="stat">${esc(l.status)}</div><div class="small">Target: <b>${esc(l.target_ip||'-')}</b><br>DNS: <b>${esc(l.dns_ip||'-')}</b></div></div></div>
+${l.status==='running'?`<div class="card" style="margin-top:16px"><h3>Targeting Information</h3><div class="target">TARGET = ${l.target_ip}
+DNS = ${l.dns_ip}
+
+TCP: 22, 25, 80, 139, 445
+UDP: 161
+DNS: 53/tcp, 53/udp
+Domain: oscp.local</div></div>`:''}
+<h2>OSCP-Style Enumeration Modules</h2><div class="grid">${Object.entries(m).map(([mod,cs])=>`<div class="card"><h3>${mod.toUpperCase()}</h3>${cs.map(c=>`<div id="challenge-${c.id}" class="challenge"><b>${esc(c.title)}</b><div class="small muted">${c.points} points</div>
+<div class="row" style="margin-top:8px"><button class="btn" onclick="hint('${c.id}')">Hint</button><button class="btn" onclick="walk('${c.id}')">Walkthrough</button></div>
+<div id="hint-${c.id}" class="small muted hide">${esc(c.hint)}</div><div id="walk-${c.id}" class="walk hide"></div>
+<div id="submit-area-${c.id}"><input id="ans-${c.id}" placeholder="Submit your finding"><button id="submit-${c.id}" class="btn primary" onclick="submitC('${c.id}')">Submit</button> <span id="res-${c.id}" class="small"></span></div></div>`).join('')}</div>`).join('')}</div>
+<div class="footer">ImranTheExploitHunter · OSCP-Style PentestLab · Local Controlled Training Environment</div>`;
+loadSolved();
+}
+async function loadSolved(){
+try{
+ const j=await api('/submissions');
+ (j.submissions||[]).filter(x=>x.correct).forEach(x=>markSolved(x.challenge_id,x.points,false));
+}catch(e){console.warn('Could not load submission state',e)}
+}
+function markSolved(id,points,animate=true){
+ const area=document.querySelector('#submit-area-'+id);
+ if(!area)return;
+ const card=document.querySelector('#challenge-'+id);
+ if(card)card.classList.add('solved');
+ area.innerHTML='<span class="ok" style="font-weight:800">✓ SOLVED</span> <span class="small muted">+'+points+' points</span>';
+}
+async function act(p){try{await api(p,{method:'POST'});dashboard()}catch(e){alert(e.message)}}function hint(id){document.querySelector('#hint-'+id).classList.toggle('hide')}async function walk(id){let e=document.querySelector('#walk-'+id);if(!e.dataset.loaded){const password=prompt('Walkthrough password:');if(password===null)return;try{let j=await api('/walkthrough/'+id,{method:'POST',body:{password}});e.innerHTML='<div style="font-weight:800;margin-bottom:8px">Solution / Walkthrough</div><div>'+esc(j.walkthrough)+'</div><div style="margin-top:12px;padding-top:10px;border-top:1px solid #3b151c"><b>Expected Answer:</b> <code>'+esc(j.expected_answer)+'</code></div><div class="small muted" style="margin-top:6px">Expected answer is shown for the walkthrough only; enter it yourself in the answer field.</div>';e.dataset.loaded='1';const input=document.querySelector('#ans-'+id);if(input)input.focus()}catch(err){alert(err.message);return}}e.classList.toggle('hide')}async function submitC(id){
+try{
+ const input=document.querySelector('#ans-'+id);
+ const value=input.value.trim();
+ if(!value){input.focus();return}
+ const j=await api('/submit',{method:'POST',body:{challenge_id:id,answer:value}});
+ if(j.correct){
+   markSolved(id,j.points);
+   await refreshScore();
+   try{ const sc=await api('/score'); if(Number(sc.percent)>=100 && window.showVictory) window.showVictory(); }catch(e){}
+ }else{
+   const e=document.querySelector('#res-'+id);
+   e.textContent='✗ '+j.message;
+   e.className='small bad';
+ }
+}catch(e){alert(e.message)}
+}
+async function refreshScore(){
+ try{
+  const s=await api('/score');
+  const v=document.querySelector('#score-value'),p=document.querySelector('#score-progress'),t=document.querySelector('#score-text');
+  if(v)v.textContent=s.points+'/'+s.possible;
+  if(p)p.style.width=s.percent+'%';
+  if(t)t.textContent=s.completed+' challenges solved · '+s.percent+'%';
+ }catch(e){console.warn(e)}
+}
+dashboard();
+</script><style>
+#victory-overlay{position:fixed;inset:0;z-index:99999;display:none;align-items:center;justify-content:center;overflow:hidden;background:radial-gradient(circle,rgba(25,10,25,.72),rgba(2,3,8,.97) 72%);backdrop-filter:blur(7px)}
+#victory-overlay.show{display:flex;animation:fadeIn .4s ease-out}.victory-card{position:relative;z-index:2;text-align:center;padding:44px 62px;border:1px solid rgba(255,255,255,.18);border-radius:26px;background:rgba(8,9,18,.84);box-shadow:0 0 45px rgba(255,70,100,.22),0 0 130px rgba(255,190,60,.12);animation:pop .65s cubic-bezier(.2,.9,.2,1)}
+.victory-kicker{font-size:13px;letter-spacing:6px;opacity:.7}.victory-title{margin:10px 0;font-size:clamp(40px,7vw,84px);font-weight:950;letter-spacing:3px;line-height:1;background:linear-gradient(90deg,#fff,#ffd166,#ff5c8a,#fff);background-size:300% auto;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 2s linear infinite}.victory-sub{font-size:18px;opacity:.9}.victory-score{margin-top:10px;font-size:28px;font-weight:900}.victory-close{margin-top:26px;padding:11px 25px;border-radius:999px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:inherit;cursor:pointer}
+#victory-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}@keyframes pop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}@keyframes fadeIn{from{opacity:0}to{opacity:1}}@keyframes shine{to{background-position:300% center}}
+</style>
+<div id="victory-overlay"><canvas id="victory-canvas"></canvas><div class="victory-card"><div class="victory-kicker">MISSION COMPLETE</div><h1 class="victory-title">CONGRATULATIONS!</h1><div class="victory-sub">Every challenge has been solved.</div><div class="victory-score">100% COMPLETE</div><button class="victory-close">CONTINUE</button></div></div>
+<script>
+(function(){const o=document.getElementById('victory-overlay'),c=document.getElementById('victory-canvas'),ctx=c.getContext('2d');let ps=[],shown=false,raf;
+function resize(){c.width=innerWidth*devicePixelRatio;c.height=innerHeight*devicePixelRatio;c.style.width=innerWidth+'px';c.style.height=innerHeight+'px';ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0)}addEventListener('resize',resize);resize();
+function burst(x,y){for(let i=0;i<120;i++){let a=Math.random()*Math.PI*2,s=2+Math.random()*7;ps.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-2,life:90+Math.random()*80,size:2+Math.random()*3})}}
+function draw(){if(!o.classList.contains('show'))return;ctx.clearRect(0,0,innerWidth,innerHeight);if(Math.random()<.09)burst(innerWidth*(.1+.8*Math.random()),innerHeight*(.1+.5*Math.random()));ps=ps.filter(p=>p.life>0);for(const p of ps){p.x+=p.vx;p.y+=p.vy;p.vy+=.045;p.vx*=.992;p.life--;ctx.globalAlpha=Math.max(0,p.life/160);ctx.fillStyle='hsl('+((p.x+p.y)%360)+',100%,65%)';ctx.fillRect(p.x,p.y,p.size*2,p.size)}raf=requestAnimationFrame(draw)}
+window.showVictory=function(){if(shown)return;shown=true;o.classList.add('show');for(let i=0;i<8;i++)setTimeout(()=>burst(innerWidth*(.1+.8*Math.random()),innerHeight*(.1+.5*Math.random())),i*200);draw()};o.querySelector('.victory-close').onclick=()=>{o.classList.remove('show');cancelAnimationFrame(raf)};
+})();
+</script>
+<script>
+// Celebrate persisted 100% completion too (not only the final submit click).
+(async function(){
+  async function celebrateIfComplete(){
+    try{
+      const r=await fetch('/api/score',{cache:'no-store'});
+      if(!r.ok)return;
+      const s=await r.json();
+      if(Number(s.percent)>=100 || (Number(s.completed)>0 && Number(s.completed)===Number(s.total))){
+        if(window.showVictory) window.showVictory();
+      }
+    }catch(e){}
+  }
+  await new Promise(r=>setTimeout(r,250));
+  celebrateIfComplete();
+})();
+</script>
+</body></html>
